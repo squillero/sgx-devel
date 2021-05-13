@@ -34,45 +34,6 @@ from numbers import Number
 from sgx.fitness.base import Fitness
 
 
-class Scalar(Fitness, float):
-    """A single numeric value -- Larger is better."""
-    pass
-
-
-class Integer(Fitness, int):
-    """A single numeric value -- Larger is better."""
-    pass
-
-
-class Approximate(Fitness, float):
-    """A single, floating-point value with approximate equality -- Larger is better."""
-
-    def __init__(self, argument, rel_tol: float = 1e-09, abs_tol: float = 0):
-        """See the documentation of math.isclose() and PEP485."""
-        super(Approximate, self).__init__()
-        self._rel_tol = rel_tol
-        self._abs_tol = abs_tol
-
-    def decorate(self) -> str:
-        return str(float(self)) + '≈'
-
-    def is_distinguishable(self, other: 'Fitness') -> bool:
-        self.check_comparable(other)
-        return not isclose(float(self), float(other), rel_tol=self._rel_tol, abs_tol=self._abs_tol)
-
-    def is_fitter(self, other: 'Fitness') -> bool:
-        self.check_comparable(other)
-        return self != other and float(self) > float(other)
-
-    def check_comparable(self, other: 'Approximate'):
-        super().check_comparable(other)
-        assert self._abs_tol == other._abs_tol, f"Can't is_fitter Fitness Floats with different absolute tolerance ({float(self)}±{self._abs_tol} vs. {float(other)}±{other._abs_tol})"
-        assert self._rel_tol == other._rel_tol, f"Can't is_fitter Fitness Floats with different relative tolerance ({float(self)}±{self._rel_tol}r vs. {float(other)}±{other._rel_tol}r)"
-
-
-# VECTORS
-
-
 class Vector(Fitness):
     """A generic vector of Fitness values.
 

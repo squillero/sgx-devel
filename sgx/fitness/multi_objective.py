@@ -28,8 +28,8 @@
 
 from abc import ABC, abstractmethod
 
-from ..utils import logging
-from .simple import Vector
+from sgx.utils import logging
+from sgx.fitness.simple import Vector
 
 
 class MultiObjective(Vector, ABC):

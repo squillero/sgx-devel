@@ -19,5 +19,5 @@ Project page: https://github.com/squillero/randy
 __version__ = '0.3β'
 __author__ = 'Giovanni Squillero'
 
-from .core import Randy
+#from sgx.randy.core import Randy
 from .default import *

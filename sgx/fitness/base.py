@@ -28,8 +28,7 @@
 
 import warnings
 
-from ..utils import logging
-from ..base import Pedantic, Paranoid
+from sgx.base import Pedantic, Paranoid
 
 
 class Fitness(Pedantic, Paranoid):
@@ -127,8 +126,7 @@ def reversed(fitness_class: 'Fitness') -> 'Fitness':
     """Reverse fitness class turning a maximization problem into a minimization one."""
     assert isinstance(
         fitness_class,
-        type), f"Only <class 'sgx.t.Fitness'> can be reversed. Found an object of type {type(fitness_class)}."
-    assert issubclass(fitness_class, Fitness), f"Only <class 'sgx.t.Fitness'> can be reversed. Found {fitness_class}."
+        type), f"Only {Fitness} can be reversed. Found an object of type {type(fitness_class)}."
 
     class r(fitness_class):
 

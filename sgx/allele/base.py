@@ -29,7 +29,7 @@
 from abc import ABC, abstractmethod
 from typing import Tuple, Optional, Hashable, FrozenSet
 
-from ..base import Paranoid, Pedantic
+from sgx.base import Paranoid, Pedantic
 
 
 class Allele(Paranoid, Pedantic, ABC):

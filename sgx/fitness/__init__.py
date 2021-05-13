@@ -27,10 +27,6 @@
 # limitations under the License.
 
 from .base import reversed
-
-from .simple import Scalar, Approximate, Integer
-from .simple import Vector
-
+from .simple import Scalar, Approximate, Integer, Vector
 from .multi_objective import Lexicase
-
 from .function import FitnessFunction

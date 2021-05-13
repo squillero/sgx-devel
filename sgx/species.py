@@ -28,25 +28,32 @@
 
 from typing import Tuple, Sequence, Any, Callable, Optional, Hashable, Union
 
-from . import randy
+from sgx import randy
 
-from .utils import logging
-from .fitness import FitnessFunction
-from .base import Genome, Genotype
-from .allele.base import Allele
-from .fitness.base import Fitness
+from utils import logging
+from fitness import FitnessFunction
+from genome import Genome
+from genotype import Genotype
+from allele.base import Allele
+from fitness.base import Fitness
 
 
 class Species:
     """Missing"""
 
+    _genome: Genome
+    _fitness_function: FitnessFunction
+    _uncertain_evaluation: bool
+
     def __init__(self,
                  genome: Sequence[Any],
                  fitness_function: FitnessFunction,
-                 mutation_rate: Optional[float] = None) -> None:
+                 mutation_rate: Optional[float] = None,
+                 uncertain_evaluation: Optional[bool] = False) -> None:
 
         self._genome = Genome(genome)
         self._fitness_function = fitness_function
+        self._uncertain_evaluation = uncertain_evaluation
 
         if mutation_rate is None:
             self._mutation_rate = 1 / len(self._genome)
@@ -62,7 +69,7 @@ class Species:
     def sample(self, sample_type: Optional[str] = Allele.DEFAULT_SAMPLE_TYPE) -> Genotype:
         genotype = list()
         for a in self._genome:
-            if randy.random() < self._mutation_rate:
+            if randy.boolean(p_true=self._mutation_rate):
                 genotype.append(a.sample(sample_type='uniform'))
             else:
                 genotype.append(a.sample(sample_type='sample'))
@@ -74,3 +81,30 @@ class Species:
 
     def evaluate(self, genotype: Genotype) -> Fitness:
         return self._fitness_function(genotype)
+
+    def _simple_compare(self, first: Genotype, second: Genotype) -> int:
+        # TODO: Add Caching
+        f1 = self._fitness_function(first)
+        f2 = self._fitness_function(second)
+        if f1 > f1:
+            return 1
+        elif f2 > f1:
+            return -1
+        else:
+            return 0
+
+    def _stochastic_compare(self, first: Genotype, second: Genotype) -> int:
+        f1 = self._fitness_function(first)
+        f2 = self._fitness_function(second)
+        if f1 > f1:
+            return 1
+        elif f2 > f1:
+            return -1
+        else:
+            return 0
+
+    def compare(self, first: Genotype, second: Genotype) -> int:
+        if not self._uncertain_evaluation:
+            return self._simple_compare(first, second)
+        else:
+            return self._stochastic_compare(first, second)

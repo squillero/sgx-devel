@@ -26,37 +26,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import abc
-from typing import Callable, Any, Optional, Type, Union
+import numpy as np
+from scipy.optimize import rosen
 
-from sgx.genotype import Genotype
-from sgx.fitness.base import Fitness
-from sgx.fitness.simple import Scalar
+import sgx
+import randy
+import matplotlib.pyplot as plt
 
+DIMENSIONS = 2
+from scipy.optimize import rosen
 
-class FitnessFunction(abc.Callable):
-    def __init__(self,
-                 fitness_function: Callable[[Genotype], Any],
-                 type_: Optional[Type[Fitness]] = Type[Scalar],
-                 best_fitness: Optional[Fitness] = None,
-                 cook: Optional[Callable[[Genotype], Any]] = None):
-        if cook is not None:
-            self._fitness_function = lambda g: fitness_function(cook(g))
-        else:
-            self._fitness_function = fitness_function
-        self._fitness_type = type_
-        if best_fitness:
-            self._best_fitness = type_(best_fitness)
-        else:
-            self._best_fitness = None
-
-    def __call__(self, genotype: Genotype) -> Fitness:
-        return self._fitness_type(self._fitness_function(genotype))
-
-    @property
-    def fitness_type(self):
-        return self._fitness_type
-
-    @property
-    def best_fitness(self):
-        return self._best_fitness
+fitness_function = sgx.fitness.FitnessFunction(lambda i: rosen(i),
+                                               type_=sgx.fitness.Scalar)
+genome = sgx.t.Genome([sgx.allele.FloatingPoint(0, 2, mixture_size=10) for _ in range(DIMENSIONS)])
+species = sgx.t.Species(genome=genome, fitness_function=fitness_function)
+archive = sgx.algorithms.sg(species, max_generation=10, random_seed=1)

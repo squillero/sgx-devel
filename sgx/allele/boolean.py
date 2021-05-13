@@ -29,8 +29,8 @@
 from typing import Optional, Sequence, Hashable, Union, Dict, Tuple
 from math import isclose, exp
 
-from ..utils import logging
-from .base import Allele
+from sgx.utils import logging
+from sgx.allele.base import Allele
 
 class Boolean(Allele):
 

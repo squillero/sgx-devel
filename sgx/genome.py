@@ -26,37 +26,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import abc
-from typing import Callable, Any, Optional, Type, Union
+__all__ = ['Genome']
 
-from sgx.genotype import Genotype
-from sgx.fitness.base import Fitness
-from sgx.fitness.simple import Scalar
+from base import Pedantic, Paranoid
+from genotype import Genotype
+from sgx.allele.base import Allele
 
 
-class FitnessFunction(abc.Callable):
-    def __init__(self,
-                 fitness_function: Callable[[Genotype], Any],
-                 type_: Optional[Type[Fitness]] = Type[Scalar],
-                 best_fitness: Optional[Fitness] = None,
-                 cook: Optional[Callable[[Genotype], Any]] = None):
-        if cook is not None:
-            self._fitness_function = lambda g: fitness_function(cook(g))
-        else:
-            self._fitness_function = fitness_function
-        self._fitness_type = type_
-        if best_fitness:
-            self._best_fitness = type_(best_fitness)
-        else:
-            self._best_fitness = None
+class Genome(list, Pedantic, Paranoid):
+    """A tuple of Alleles, each one specifying a set of alternative genes."""
 
-    def __call__(self, genotype: Genotype) -> Fitness:
-        return self._fitness_type(self._fitness_function(genotype))
+    def __init__(self, *args):
+        super().__init__(*args)
+        assert self.run_paranoia_checks()
+        self._is_squeezable = all(a.is_squeezable for a in list(self))
+
+    def __repr__(self):
+        return object.__repr__(self)
 
     @property
-    def fitness_type(self):
-        return self._fitness_type
+    def is_squeezable(self):
+        return self._is_squeezable
 
-    @property
-    def best_fitness(self):
-        return self._best_fitness
+    def run_paranoia_checks(self) -> bool:
+        for i, a in enumerate(self):
+            assert isinstance(a, Allele), f"Locus[{i}] is not {Allele} but {type(a)}"
+        return super().run_paranoia_checks()
+
+    def is_valid(self, genotype: Genotype) -> bool:
+        if any(not a.is_valid(g) for a, g in zip(list(self), genotype)):
+            return False
+        return super().is_valid(genotype)
+
+    def format_genotype(self, genotype: Genotype) -> str:
+        if self._is_squeezable:
+            return genotype.squeeze()
+        else:
+            return str(genotype)

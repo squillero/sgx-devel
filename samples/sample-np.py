@@ -51,3 +51,4 @@ r = [a.sample() for _ in range(SAMPLES)]
 #plt.hist(r, density=True, histtype='stepfilled', alpha=0.2)
 sns.histplot(r, bins=50)
 plt.show()
+

@@ -29,10 +29,10 @@
 from typing import Optional, Sequence, Hashable, Union, Dict, Tuple, List, Any
 from math import isclose
 
-from .. import randy
+from sgx import randy
 
-from ..utils import logging
-from .base import Allele
+from sgx.utils import logging
+from sgx.allele.base import Allele
 
 
 class Categorical(Allele):

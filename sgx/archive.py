@@ -29,8 +29,9 @@
 from collections import namedtuple
 from typing import Sequence, Optional, Tuple
 
-from .base import Paranoid, Genotype
-from .fitness.base import Fitness
+from base import Paranoid
+from genotype import Genotype
+from sgx.fitness.base import Fitness
 
 
 class Archive(Paranoid):

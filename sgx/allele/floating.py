@@ -31,10 +31,10 @@ from math import isclose
 
 import numpy as np
 
-from .. import randy
+from sgx import randy
 
-from ..utils import logging
-from .base import Allele
+from sgx.utils import logging
+from sgx.allele.base import Allele
 
 
 class UnitDistribution:
@@ -54,6 +54,7 @@ class UnitDistribution:
 class FloatingPoint(Allele):
 
     DEFAULT_MIXTURE_SIZE = 10
+    DEFAULT_SCALE = .5
 
     _mixture: List[UnitDistribution]
     _learning_rate: float
@@ -66,19 +67,19 @@ class FloatingPoint(Allele):
         self._interval = (a, b)
         self._learning_rate = learning_rate
         if mixture_size == 1:
-            self._mixture = [UnitDistribution(a, b, loc=(a+b)/2, scale=1.)]
+            self._mixture = [UnitDistribution(a, b, loc=(a+b)/2, scale=FloatingPoint.DEFAULT_SCALE)]
         else:
             self._mixture = list()
             step = (b-a)/(mixture_size-1)
             for m in range(mixture_size):
-                self._mixture.append(UnitDistribution(a, b, loc=a+step*m, scale=1.))
+                self._mixture.append(UnitDistribution(a, b, loc=a+step*m, scale=FloatingPoint.DEFAULT_SCALE))
 
     def sample(self, sample_type: Optional[str] = Allele.DEFAULT_SAMPLE_TYPE) -> Hashable:
         if sample_type == Allele.SAMPLE_TYPE__SAMPLE:
             dist = randy.choice(self._mixture)
             return dist.sample()
         elif sample_type == Allele.SAMPLE_TYPE__UNIFORM:
-            return randy.random(self.a, self.b)
+            return randy.random(self._interval[0], self._interval[1])
         elif sample_type == Allele.SAMPLE_TYPE__MODE:
             assert NotImplementedError
             return None
