@@ -13,24 +13,23 @@
 #############################################################################
 
 # Copyright 2021 Giovanni Squillero
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Optional, Hashable
 from abc import ABC, abstractmethod
+from typing import Tuple, Optional, Hashable, FrozenSet
 
-from ..utils import logging
-from ..base import Paranoid, Pedantic
+from sgx.base import Paranoid, Pedantic
 
 
 class Allele(Paranoid, Pedantic, ABC):
@@ -39,11 +38,13 @@ class Allele(Paranoid, Pedantic, ABC):
     An allele must be Hashable (ie. non modifiable)
     """
 
-    SAMPLE_TYPE__SAMPLE = 'sample'
-    SAMPLE_TYPE__UNIFORM = 'uniform'
-    SAMPLE_TYPE__MODE = 'mode'
-    VALID_SAMPLE_TYPES = [SAMPLE_TYPE__SAMPLE, SAMPLE_TYPE__MODE, SAMPLE_TYPE__UNIFORM]
-    DEFAULT_SAMPLE_TYPE = SAMPLE_TYPE__SAMPLE
+    SAMPLE_TYPE__SAMPLE: str = 'sample'
+    SAMPLE_TYPE__UNIFORM: str = 'uniform'
+    SAMPLE_TYPE__MODE: str = 'mode'
+    VALID_SAMPLE_TYPES: FrozenSet[str] = frozenset([SAMPLE_TYPE__SAMPLE, SAMPLE_TYPE__MODE, SAMPLE_TYPE__UNIFORM])
+    DEFAULT_SAMPLE_TYPE: str = SAMPLE_TYPE__SAMPLE
+
+    DEFAULT_LEARNING_RATE: float = .001
 
     @property
     def mode(self) -> Hashable:

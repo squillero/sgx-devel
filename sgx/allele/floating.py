@@ -26,52 +26,77 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Sequence, Hashable, Union, Dict, Tuple
-from math import isclose, exp
+from typing import Optional, Sequence, Hashable, Union, Dict, Tuple, List
+from math import isclose
+
+import numpy as np
+
+from sgx import randy
 
 from sgx.utils import logging
 from sgx.allele.base import Allele
 
-class Boolean(Allele):
 
-    _x: float
-    _y: float
+class UnitDistribution:
+    a: float
+    b: float
+    loc: float
+    scale: float
+
+    def __init__(self, a, b, loc, scale) -> None:
+        self.a, self.b = a, b
+        self.loc, self.scale = loc, scale
+
+    def sample(self) -> float:
+        return randy.scale_random(self.a, self.b, loc=self.loc, scale=self.scale)
+
+
+class FloatingPoint(Allele):
+
+    DEFAULT_MIXTURE_SIZE = 10
+    DEFAULT_SCALE = .5
+
+    _mixture: List[UnitDistribution]
     _learning_rate: float
+    _interval: Tuple[float, float]
 
-    @staticmethod
-    def sigmoid(x: float, k: Optional[float] = 1) -> float:
-        """Logistic function with given logistic growth (`k`). See https://en.wikipedia.org/wiki/Logistic_function"""
-        return 1 / (1 + exp(-k * x))
-
-    def __init__(self, learning_rate: float = Allele.DEFAULT_LEARNING_RATE):
-        self._x = 0
-        self._k = 1
+    def __init__(self, a: float, b: float, mixture_size: int = DEFAULT_MIXTURE_SIZE, learning_rate: float = Allele.DEFAULT_LEARNING_RATE):
+        assert a < b, f"Illegal interval [{a}, {b}]"
+        assert mixture_size > 0, f"Mixture size must be poitive (found {mixture_size})"
         assert 0 < learning_rate < 1, f"Learning rate must be ]0, 1[ (found {learning_rate})"
+        self._interval = (a, b)
         self._learning_rate = learning_rate
+        if mixture_size == 1:
+            self._mixture = [UnitDistribution(a, b, loc=(a+b)/2, scale=FloatingPoint.DEFAULT_SCALE)]
+        else:
+            self._mixture = list()
+            step = (b-a)/(mixture_size-1)
+            for m in range(mixture_size):
+                self._mixture.append(UnitDistribution(a, b, loc=a+step*m, scale=FloatingPoint.DEFAULT_SCALE))
 
     def sample(self, sample_type: Optional[str] = Allele.DEFAULT_SAMPLE_TYPE) -> Hashable:
         if sample_type == Allele.SAMPLE_TYPE__SAMPLE:
-            return randy.random() < Boolean.sigmoid(self._x, self._k)
+            dist = randy.choice(self._mixture)
+            return dist.sample()
         elif sample_type == Allele.SAMPLE_TYPE__UNIFORM:
-            return randy.boolean()
+            return randy.random(self._interval[0], self._interval[1])
         elif sample_type == Allele.SAMPLE_TYPE__MODE:
-            # TODO: wtf?
-            self._x > 0
+            assert NotImplementedError
+            return None
         else:
             assert sample_type in Allele.VALID_SAMPLE_TYPES, f"Unknown sample type: {sample_type!r} vs. {Allele.VALID_SAMPLE_TYPES}"
 
     def update(self, winner: Hashable, loser: Hashable) -> None:
-        if winner and not loser:
-            self._x += self._learning_rate
-        elif not winner and loser:
-            self._x -= self._learning_rate
+        loc = np.array([m.loc for m in self._mixture])
+        loser_index = np.argmin(abs(loc - loser))
+        self._mixture[loser_index].loc = winner
         assert self.run_paranoia_checks()
 
     def describe(self) -> str:
-        return f'{self._x:.e}>{Boolean.sigmoid(self._x, self._k):.2}'
+        return f'[{self._interval[0]},{self._interval[1]}]/{len(self._mixture)}'
 
     def is_valid(self, value: Hashable) -> bool:
-        return value in [True, False]
+        return self._interval[0] <= value <= self._interval[1];
 
     def run_paranoia_checks(self) -> bool:
         return super().run_paranoia_checks()

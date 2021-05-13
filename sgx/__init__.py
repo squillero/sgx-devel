@@ -13,13 +13,13 @@
 #############################################################################
 
 # Copyright 2021 Giovanni Squillero
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,21 +34,18 @@ Copyright © 2021 Giovanni Squillero. Licensed under Apache-2.0.
 """
 
 __name__ = "sgx"
-__version__ = "0.2.dev5"
+__version__ = "0.3.dev1"
 __author__ = "Giovanni Squillero"
 __copyright__ = "Copyright © 2021 Giovanni Squillero. Licensed under Apache-2.0."
 
 import sys
 import warnings
 
-import randy
-from .utils import logging
-from . import allele
+from utils import logging
+from . import allele, randy
 from . import fitness
 from . import algorithms
 from . import t
-
-from .species import Species
 
 sys.stderr.flush()
 sys.stdout.flush()

@@ -13,13 +13,13 @@
 #############################################################################
 
 # Copyright 2021 Giovanni Squillero
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,30 +27,30 @@
 # limitations under the License.
 
 from collections import namedtuple
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Tuple
 
-from .utils import logging
-from .base import Paranoid, Genotype, Tuple
-from .fitness.base import Fitness
+from base import Paranoid
+from genotype import Genotype
+from sgx.fitness.base import Fitness
 
 
 class Archive(Paranoid):
     """Archive of best solutions so far"""
 
-    Element = namedtuple('Element', 'genotype fitness generation')
+    Snapshot = namedtuple('Snapshot', 'genotype fitness generation')
 
     def __init__(self):
         self._archive = set()
-        self._age = 0
+        self._max_generation = 0
 
     def _add(self, genotype: Genotype, fitness: Fitness, generation: int) -> bool:
-        """Add a new solution to Archive, return True if really added."""
+        """Try to add a new solution to Archive, return True if actually added."""
         assert isinstance(
             genotype, Genotype), f"Only <Genotype, Fitness> can be added to the archive (genotype: {type(genotype)})"
         assert isinstance(fitness,
                           Fitness), f"Only <Genotype, Fitness> can be added to the archive (fitness: {type(fitness)})"
 
-        new_element = Archive.Element(genotype, fitness, generation)
+        new_element = Archive.Snapshot(genotype, fitness, generation)
         if new_element in self._archive or any(ae.fitness >> fitness for ae in self._archive):
             return False
         else:
@@ -61,12 +61,12 @@ class Archive(Paranoid):
             self._archive = new_set
             return True
 
-    def add_generation(self, individuals: Sequence, generation: Optional[int] = None):
+    def add_generation(self, individuals: Sequence[Tuple[Genotype, Fitness]], generation: Optional[int] = None):
         """Add the individuals of a generation"""
 
         if generation is None:
-            self._age += 1
-            generation = self._age
+            self._max_generation += 1
+            generation = self._max_generation
         result = False
         for g, f in individuals:
             result = result or self._add(g, f, generation)
@@ -78,7 +78,7 @@ class Archive(Paranoid):
 
     @property
     def age(self):
-        return self._age
+        return self._max_generation
 
     @property
     def last_improvement(self):
@@ -88,7 +88,11 @@ class Archive(Paranoid):
     def first_improvement(self):
         return min(a for _, _, a in self._archive)
 
-    def __iadd__(self, individuals) -> bool:
+    def __str__(self):
+        bullet = "\n  * "
+        return f"Archive at {hex(id(self))}; last generation: {self._max_generation}{bullet}" + bullet.join(str(i) for i in self.items)
+
+    def __iadd__(self, individuals: Sequence[Tuple[Genotype, Fitness]]) -> bool:
         """Add a set of individuals as a new generation."""
         return self.add_generation(individuals)
 

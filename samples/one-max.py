@@ -26,12 +26,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from itertools import product
 
-def test_choice():
-    for _ in range(10000):
-        assert randy.choice([0, 1, 2, 3, 4], p=[1, 0, 0, 0, 0]) == 0
-        assert randy.choice([0, 1, 2, 3, 4], p=[0, .25, .25, .25, .25]) != 0
+import numpy as np
+from tqdm import tqdm
+
+import sgx
 
 
-def test_shuffled():
-    assert list(range(1000)) == sorted(randy.shuffled(list(range(1000))))
+PROBLEM_SIZE = 100
+
+fitness_function = sgx.fitness.FitnessFunction(lambda i: sum(i), best_fitness=PROBLEM_SIZE, type_=sgx.fitness.Scalar)
+
+genome = sgx.t.Genome([sgx.allele.Categorical([0, 1]) for _ in range(PROBLEM_SIZE)])
+species = sgx.t.Species(genome=genome, fitness_function=fitness_function)
+archive = sgx.algorithms.sg(species, max_generation=5000)
+print(archive)
+

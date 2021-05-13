@@ -13,13 +13,13 @@
 #############################################################################
 
 # Copyright 2021 Giovanni Squillero
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,9 +28,8 @@
 
 from abc import ABC, abstractmethod
 
-from ..utils import logging
-from ..utils.random import SGxRandom
-from .simple import Vector
+from sgx.utils import logging
+from sgx.fitness.simple import Vector
 
 
 class MultiObjective(Vector, ABC):
@@ -51,5 +50,5 @@ class Lexicase(MultiObjective):
 
     def is_fitter(self, other: 'Lexicase') -> bool:
         self.check_comparable(other)
-        order = SGxRandom.shuffled(range(len(self._values)))
+        order = randy.shuffled(range(len(self._values)))
         return Vector.compare_vectors([self._values[i] for i in order], [other._values[i] for i in order]) > 0

@@ -13,13 +13,13 @@
 #############################################################################
 
 # Copyright 2021 Giovanni Squillero
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,24 +28,32 @@
 
 from typing import Tuple, Sequence, Any, Callable, Optional, Hashable, Union
 
-from .utils import logging
-from .fitness import FitnessFunction
-from .utils.random import SGxRandom
-from .base import Genome, Genotype
-from .allele.base import Allele
-from .fitness.base import Fitness
+from sgx import randy
+
+from utils import logging
+from fitness import FitnessFunction
+from genome import Genome
+from genotype import Genotype
+from allele.base import Allele
+from fitness.base import Fitness
 
 
 class Species:
     """Missing"""
 
+    _genome: Genome
+    _fitness_function: FitnessFunction
+    _uncertain_evaluation: bool
+
     def __init__(self,
                  genome: Sequence[Any],
                  fitness_function: FitnessFunction,
-                 mutation_rate: Optional[float] = None) -> None:
+                 mutation_rate: Optional[float] = None,
+                 uncertain_evaluation: Optional[bool] = False) -> None:
 
         self._genome = Genome(genome)
         self._fitness_function = fitness_function
+        self._uncertain_evaluation = uncertain_evaluation
 
         if mutation_rate is None:
             self._mutation_rate = 1 / len(self._genome)
@@ -61,7 +69,7 @@ class Species:
     def sample(self, sample_type: Optional[str] = Allele.DEFAULT_SAMPLE_TYPE) -> Genotype:
         genotype = list()
         for a in self._genome:
-            if SGxRandom.random() < self._mutation_rate:
+            if randy.boolean(p_true=self._mutation_rate):
                 genotype.append(a.sample(sample_type='uniform'))
             else:
                 genotype.append(a.sample(sample_type='sample'))
@@ -73,3 +81,30 @@ class Species:
 
     def evaluate(self, genotype: Genotype) -> Fitness:
         return self._fitness_function(genotype)
+
+    def _simple_compare(self, first: Genotype, second: Genotype) -> int:
+        # TODO: Add Caching
+        f1 = self._fitness_function(first)
+        f2 = self._fitness_function(second)
+        if f1 > f1:
+            return 1
+        elif f2 > f1:
+            return -1
+        else:
+            return 0
+
+    def _stochastic_compare(self, first: Genotype, second: Genotype) -> int:
+        f1 = self._fitness_function(first)
+        f2 = self._fitness_function(second)
+        if f1 > f1:
+            return 1
+        elif f2 > f1:
+            return -1
+        else:
+            return 0
+
+    def compare(self, first: Genotype, second: Genotype) -> int:
+        if not self._uncertain_evaluation:
+            return self._simple_compare(first, second)
+        else:
+            return self._stochastic_compare(first, second)

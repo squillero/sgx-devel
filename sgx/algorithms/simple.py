@@ -13,13 +13,13 @@
 #############################################################################
 
 # Copyright 2021 Giovanni Squillero
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,9 @@
 
 __all__ = ['sg']
 
-from typing import Optional, Callable, Union
+from typing import Optional, Callable, Union, Any
+import sgx
+
 try:
     from tqdm import tqdm
 except:
@@ -39,9 +41,10 @@ try:
 except:
     tqdm_notebook = tqdm
 
-from ..utils import logging, jupyter_support
-from ..archive import Archive
-from .. import species as species_
+from sgx.utils import logging, jupyter_support
+from sgx.archive import Archive
+from sgx.species import Species
+from sgx.genotype import Genotype
 
 TQDM_DEFAULT_OPTIONS = {
     'bar_format': '{n:,} generations in {elapsed} (speed: {rate_fmt})',
@@ -52,8 +55,9 @@ TQDM_DEFAULT_OPTIONS = {
 }
 
 
-def sg(species: species_.Species,
+def sg(species: Species,
        max_generation: Optional[int] = None,
+       random_seed: Optional[Any] = None,
        progress_bar: Optional[Union[str, bool]] = True):
     """A vanilla optimizer
 
@@ -61,6 +65,8 @@ def sg(species: species_.Species,
     (DOI: 10.1109/ICEC.1998.700092)
     """
 
+    if random_seed is not None:
+        sgx.randy.seed(random_seed)
     tqdm_options = TQDM_DEFAULT_OPTIONS
     num_generation = 0
     archive = Archive()
@@ -92,12 +98,10 @@ def sg(species: species_.Species,
 
         i1 = species.sample()
         i2 = species.sample()
-        f1 = species.evaluate(i1)
-        f2 = species.evaluate(i2)
-
-        if f1 > f2:
+        c = species.compare(i1, i2)
+        if c > 0:
             species.update(winner=i1, loser=i2)
-        elif f2 > f1:
+        elif c < 0:
             species.update(winner=i2, loser=i1)
 
         archive_changed = archive.add_generation([[i1, f1], [i2, f2]])

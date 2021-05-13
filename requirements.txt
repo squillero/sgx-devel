@@ -1,6 +1,7 @@
-tqdm>=4.5
+tqdm>=4.50
 coloredlogs>=14
 scipy>=1.6
 numpy>=1.20
 pandas>=1.2
-#psutil>=5.7
+psutil>=5.7
+OptimizationTestFunctions>=1

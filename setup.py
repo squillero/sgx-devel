@@ -32,7 +32,7 @@ from sgx import __name__, __version__
 with open('extras/pypi-description.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
 
-OPTIONAL = ['coloredlogs', 'matplotlib', 'psutil']
+OPTIONAL = ['coloredlogs', 'matplotlib', 'psutil', 'OptimizationTestFunctions']
 with open('requirements.txt', 'r', encoding='utf-8') as fh:
     requirements = [r for r in fh.readlines() if not any(o in r for o in OPTIONAL)]
 

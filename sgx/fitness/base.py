@@ -13,13 +13,13 @@
 #############################################################################
 
 # Copyright 2021 Giovanni Squillero
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +28,7 @@
 
 import warnings
 
-from ..utils import logging
-from ..base import Pedantic, Paranoid
+from sgx.base import Pedantic, Paranoid
 
 
 class Fitness(Pedantic, Paranoid):
@@ -127,8 +126,7 @@ def reversed(fitness_class: 'Fitness') -> 'Fitness':
     """Reverse fitness class turning a maximization problem into a minimization one."""
     assert isinstance(
         fitness_class,
-        type), f"Only <class 'sgx.t.Fitness'> can be reversed. Found an object of type {type(fitness_class)}."
-    assert issubclass(fitness_class, Fitness), f"Only <class 'sgx.t.Fitness'> can be reversed. Found {fitness_class}."
+        type), f"Only {Fitness} can be reversed. Found an object of type {type(fitness_class)}."
 
     class r(fitness_class):
 
